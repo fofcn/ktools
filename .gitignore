@@ -12,3 +12,14 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+*.zip
+*.tar.gz
+*.egg
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+*.log
+*.lock
