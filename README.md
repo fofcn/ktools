@@ -15,5 +15,5 @@ pip install -r requirements.txt
 
 5. 运行
 ```shell
-flask --app flaskr --debug run
+flask --app app --debug run
 ```

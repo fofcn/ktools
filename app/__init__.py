@@ -32,4 +32,7 @@ def create_app(test_config=None):
     from .text import csv
     app.register_blueprint(csv.csvbp)
 
+    from . import pdf
+    app.register_blueprint(pdf.pdfbp)
+
     return app
