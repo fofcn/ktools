@@ -12,4 +12,6 @@ class FlaskConfig:
 
     # NAS
     NAS_STORE_PATH = os.environ.get('NAS_STORE_PATH')
+
+    TASK_POOL_NUM = 20
     
