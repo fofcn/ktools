@@ -20,6 +20,7 @@ build/
 *.jpg
 *.jpeg
 *.gif
+*.pdf
 
 *.log
 *.lock

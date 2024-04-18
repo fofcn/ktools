@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, TimeoutError,CancelledError
 import multiprocessing
 import time
+import traceback
 import uuid
 from .exception import TaskNotFoundError, TaskCannotBeCancelledError
 
@@ -18,6 +19,8 @@ class Task(ABC):
     def __init__(self) -> None:
         self.__id = uuid.uuid4()
         self.__status = TaskStatus.PENDING
+        self.__kwargs = {}
+
     def internal_run(self):
         self.status = TaskStatus.RUNNING
         try:
@@ -25,6 +28,7 @@ class Task(ABC):
             self.status = TaskStatus.COMPLETED
             return result
         except Exception as e:
+            traceback.print_exc()
             self.exception = e
             self.status = TaskStatus.FAILED
     def get_id(self):
@@ -35,6 +39,9 @@ class Task(ABC):
 
     def get_status(self):
         return self.__status
+    
+    def set_args(self, **kwargs):
+        self.__args = kwargs
    
     @abstractmethod
     def run(self):
@@ -109,7 +116,6 @@ class TaskExecutor:
 
     def __execute_task(self, task):
         task_result = task.internal_run()
-        print(f'task result: {task_result}\n')
         return task_result
 
     def submit_task(self, task):
@@ -147,8 +153,17 @@ class ExecutorController:
     def __init__(self, workernum) -> None:
         self.__executor = TaskExecutor(workernum)
         self.__futuretable = TaskFutureTable()
+        self.__kwargs = {}
+
+    def init(self, **kwargs):
+        self.__kwargs = kwargs
+
+    def before_exec(self, **kwargs):
+        pass
 
     def submit_task(self, task):
+        print("submit task")
+        self.before_exec(**self.__kwargs)
         future = self.__executor.submit_task(task)
         self.__futuretable.add(task.get_id(), future)
     
@@ -173,4 +188,3 @@ class ExecutorController:
             return None, future.get_status()
         
         return result, future.get_status()
-
