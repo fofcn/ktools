@@ -1,51 +1,20 @@
 
 import os
+
 import fitz
-from flask import current_app, jsonify, request
 
-from . import pdfbp
-from ..tp import executor, tpool
-from .. import app_holder
-from ..toolkit import toolfactory
+from flask import current_app
+from ...common.factory import AbsToolFunc
 
-@pdfbp.route('/split', methods=['POST'])
-def split_pdf():
-    current_app.logger.info(f'start splitting pdf file')
-    file = request.files['file']
-    pages_per_file = request.form['pages_per_file']
-    if file:
-        file.save(file.filename)
-        current_app.logger.info(f'pdf saved to {file.filename}')
-        pdf_splitter_task = PdfSplitterTask(file.filename, int(pages_per_file))
-        executor.submit_task(pdf_splitter_task)
-        current_app.logger.info(f'submitted task {pdf_splitter_task.get_id()}')
-        return jsonify({'task_id': pdf_splitter_task.get_id()})
-    else:
-        return jsonify({'error': 'No file uploaded'})
-    
-class PdfSplitterTask(tpool.Task):
 
-    def __init__(self, pdf_path, pages_per_file) -> None:
-        self.pdf_path = pdf_path
-        self.pages_per_file = pages_per_file
-        super().__init__()
+class PdfSplitter(AbsToolFunc):
+    def __init__(self):
+        self.name = "pdf_splitter"
 
-    def run(self):
-        with app_holder.app_.app_context():
-            factory = toolfactory.get_tool('pdf')
-            tool = factory.create_tool('splitter')
-            args = {
-                'source_file_path': self.pdf_path,
-                'pages_per_file': self.pages_per_file
-            }
-            try:
-                tool.run(args)
-                return True
-            except Exception as e:
-                print(e)
-                return False
-
-    def __split_pdf(self, source_file_path, pages_per_file):
+    def run(self, args):
+        source_file_path = args.get("source_file_path")
+        pages_per_file = args.get("pages_per_file")
+        
         current_app.logger.info(f'start splitting pdf file: {source_file_path}')
         # 首先确认文件存在
         if not os.path.exists(source_file_path):
@@ -95,5 +64,3 @@ class PdfSplitterTask(tpool.Task):
 
         # 关闭源PDF文件
         source_pdf.close()
-
-        return 'ok'
