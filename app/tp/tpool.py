@@ -17,7 +17,7 @@ class TaskStatus:
 class Task(ABC):
 
     def __init__(self) -> None:
-        self.__id = uuid.uuid4()
+        self.__id = uuid.uuid4().hex
         self.__status = TaskStatus.PENDING
         self.__kwargs = {}
 
@@ -123,9 +123,6 @@ class TaskExecutor:
         return TaskFuture(future, task)
 
     def close(self):
-        with self.lock:
-            self.tasktable.clear()
-        
         self.taskpool.shutdown(wait=True)
 
 
@@ -146,6 +143,10 @@ class TaskFutureTable:
     def get(self, id):
         with self.lock:
             return self.table[id]
+    
+    def clear(self):
+        with self.lock:
+            self.table.clear()
 
 
 class ExecutorController:
@@ -188,3 +189,8 @@ class ExecutorController:
             return None, future.get_status()
         
         return result, future.get_status()
+    
+    def shutdown(self):
+        self.__executor.close()
+        self.__futuretable.clear()
+
